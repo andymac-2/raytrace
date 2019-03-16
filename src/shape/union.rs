@@ -3,18 +3,17 @@ use crate::vec3::Vec3;
 
 use std::cmp::Ordering::Equal;
 
-#[derive(Debug)]
-pub struct Union<T> {
-    shapes: Vec<T>
+pub struct Union {
+    shapes: Vec<Box<dyn Shape>>
 }
 
-impl<T> Union<T> {
-    pub fn new (shapes: Vec<T>) -> Union<T> {
+impl Union {
+    pub fn new (shapes: Vec<Box<dyn Shape>>) -> Union {
         Union {shapes: shapes}
     }
 }
 
-impl<T: Shape> Shape for Union<T> {   
+impl Shape for Union {   
     fn collision (&self, origin: Vec3, direction: Vec3) -> Option<(Collision)> {
         let collisions = self.shapes.iter().filter_map(|shape| {
             shape.collision(origin, direction)

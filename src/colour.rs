@@ -27,10 +27,17 @@ impl Colour {
     // absorb a colour. the absorb argument is the colour of an object after
     // white light (255, 255, 255) has been shone on it
     pub fn absorb (&self, absorb: &Colour) -> Colour {
-        let red = self.red() * absorb.red() / 255.0;
-        let green = self.green() * absorb.green() / 255.0;
-        let blue = self.blue() * absorb.blue() / 255.0;
+        let red = self.red() / absorb.red();
+        let green = self.green() / absorb.green();
+        let blue = self.blue() / absorb.blue();
         Colour::new(red, green, blue)
+    }
+
+    pub fn brighten_colour (&self, factor: Colour) -> Colour {
+        Colour::new(
+            self.red() * factor.red(),
+            self.green() * factor.green(),
+            self.blue() * factor.blue())
     }
 
     pub fn brighten (&self, factor: f64) -> Colour {
@@ -38,7 +45,12 @@ impl Colour {
     }
 
     pub fn to_bytes (&self) -> [u8; 3] {
-        [self.red() as u8, self.green() as u8, self.blue() as u8]
+        let attenuated = (self.colour + Vec3::new(14.0, 14.0, 14.0))
+            .scale(1.0/241.0);
+        let red = (attenuated.x * 255.0) / (attenuated.x + 1.0);
+        let green = (attenuated.y * 255.0) / (attenuated.y + 1.0);
+        let blue = (attenuated.z * 255.0) / (attenuated.z + 1.0);
+        [red as u8, green as u8, blue as u8]
     }
 
     pub const PINK: Colour = Colour {
