@@ -39,7 +39,12 @@ impl Colour {
             self.green() * factor.green(),
             self.blue() * factor.blue())
     }
-
+    pub fn powf (&self, factor: f64) -> Colour {
+        Colour::new(
+            self.red().powf(factor),
+            self.green().powf(factor),
+            self.blue().powf(factor))
+    }
     pub fn brighten (&self, factor: f64) -> Colour {
         Colour {colour: self.colour.scale(factor)}
     }
@@ -67,6 +72,9 @@ impl Colour {
     };
     pub const GREY: Colour = Colour {
         colour: Vec3 {x: 180.0, y: 180.0, z: 180.0},
+    };
+    pub const BLACK: Colour = Colour {
+        colour: Vec3 {x: 0.0, y: 0.0, z: 0.0},
     };
 }
 

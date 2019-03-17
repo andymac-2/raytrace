@@ -21,6 +21,6 @@ impl Camera {
             self.up.scale(y) + 
             self.left.scale(x);
 
-        end - start;
+        end - start
     }
 }

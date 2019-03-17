@@ -10,6 +10,9 @@ use vec3::Vec3;
 mod shape;
 use shape::{Shape, Collision, Sphere, Translate, Scale, Union};
 
+mod body;
+use body::{Ray, Body};
+
 mod material;
 use material::Material;
 
@@ -21,10 +24,10 @@ fn main() -> io::Result<()> {
     let mut stdout = io::stdout();
     let mut rng = rand::thread_rng();
 
-    let size: f64 = 5.0;
-    let samples: u32 = 5;
+    let size: f64 = 2.0;
+    let samples: u32 = 100;
 
-    let cam_position = Vec3::new(-8.0, -30.0, 10.0);
+    let cam_position = Vec3::new(-3.0, -30.0, 16.0);
     let focal_point = Vec3::new(4.0, 0.0, 5.0);
     let direction = (focal_point - cam_position).normalise();
     
@@ -48,7 +51,11 @@ fn main() -> io::Result<()> {
                     down.scale((y as f64) + end_dy);
 
                 let direction = (end - start).normalise();
-                colour = colour + sampler (start, direction);
+                colour = colour + sampler (&Ray {
+                    origin: start,
+                    direction: direction,
+                    attenuation: Colour::new(1.0, 1.0, 1.0),
+                });
             });
 
             colour = colour.brighten(1.0/(samples as f64));
@@ -60,9 +67,8 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn sampler (origin: Vec3, dir: Vec3) -> Colour {
-    let direction = dir.normalise();
-
+fn sampler (Ray{origin, direction, attenuation}: &Ray) -> Colour {
+    let direction = direction.normalise();
     let scene = Union::new (vec![
         Box::new(
             Scale::new(Vec3::new(2.0, 1.0, 1.0),
@@ -75,35 +81,47 @@ fn sampler (origin: Vec3, dir: Vec3) -> Colour {
             Translate::new(Vec3::new(4.0, 0.0, 5.0), 
             Sphere::new(3.0))),
         Box::new(
-            Translate::new(Vec3::new(4.0, -7.0, 3.0), 
+            Translate::new(Vec3::new(4.0, -7.0, 8.0), 
             Sphere::new(3.0))),
     ]);
-    let material = Material::new(
-        Colour::new(0.9, 0.4, 0.4), None, Some(0.95), 0.0, 
-        Colour::new(0.6, 0.6, 0.6));
+    let material = Material {
+        reflective_absorption: Some(Colour::new(0.2, 0.2, 0.2)),
+        refractive_absorption: Some(Colour::new(0.8, 0.95, 0.8)),
+        diffuse_absorption: Some(Colour::new(0.9, 0.4, 0.4)),
+        // 0.0 for lambertian, high value for specular, None for perfectly sharp
+        reflective_sharpness: Some(2.0),
+        // 0.0 for diffuse, high value for specular, None for perfectly sharp
+        refractive_sharpness: None,
+        refractive_index: 1.2,
+    };
+    let body = Body {shape: scene, material: material};
+    let rays = body.get_rays(*origin, direction);
 
-    match scene.collision(origin, direction) {
-        None => {
-            if Vec3::Z.dot(&direction) > 0.0 {
-                return Colour::new(80.0, 400.0, 500.0)
-                    .brighten(direction.z / 2.0 + 0.5);
-            }
+    // possibly dangerous. Dark material which does not reflect or refract may
+    // appear tranparent
+    if rays.len() == 0 {
+        if Vec3::Z.dot(&direction) > 0.0 {
+            return Colour::new(300.0, 600.0, 700.0)
+                .brighten(direction.z / 2.0 + 0.5)
+                .brighten_colour(*attenuation);
+        }
 
-            let t = (-origin.z) / direction.z;
-            let collision = origin + direction.scale(t);
-            if (f64::ceil(collision.x / 3.0) + 
-                f64::ceil(collision.y / 3.0)) as i32 % 2 == 0
-            {
-                Colour::new(200.0, 80.0, 80.0)
-            }
-            else {
-                Colour::new(80.0, 200.0, 80.0)
-            }
+        let t = (-origin.z) / direction.z;
+        let collision = *origin + direction.scale(t);
+        if (f64::ceil(collision.x / 3.0) + 
+            f64::ceil(collision.y / 3.0)) as i32 % 2 == 0
+        {
+            Colour::new(20.0, 20.0, 20.0).brighten_colour(*attenuation)
         }
-        Some (Collision {normal, collision, ..}) => {
-            let reflection = material.reflect_direction(direction, normal);
-            let collision_off_surface = collision + reflection.scale(0.001);
-            material.reflect_colour(sampler (collision_off_surface, reflection))
+        else {
+            Colour::new(300.0, 300.0, 300.0).brighten_colour(*attenuation)
         }
+    }
+    else {
+        let mut colour = Colour::BLACK;
+        for ray in rays.iter() {
+            colour = (colour + sampler(ray)).brighten_colour(*attenuation);
+        }
+        colour
     }
 }

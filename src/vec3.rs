@@ -52,11 +52,17 @@ impl Vec3 {
     pub fn normalise (&self) -> Vec3 {
         self.scale(1.0 / self.len())
     }
+    pub fn normalised (&self) -> bool {
+        (self.len_sq() - 1.0).abs() < 0.0001
+    }
 
     pub fn dist_sq (&self, other: Vec3) -> f64 {
         (self.x - other.x) * (self.x - other.x) +
         (self.y - other.y) * (self.y - other.y) +
         (self.z - other.z) * (self.z - other.z)
+    }
+    pub fn dist (&self, other: Vec3) -> f64 {
+        f64::sqrt(self.dist_sq(other))
     }
 
     pub fn len_sq (&self) -> f64 {

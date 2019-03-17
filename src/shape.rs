@@ -31,6 +31,6 @@ impl Collision {
 pub trait Shape {
     // collision to the outside of a shape
     fn collision (&self, origin: Vec3, direction: Vec3) -> Option<Collision>;
-    // collision to the inside of a shape
+    // collision to the inside of a shape. normal points to outside shape.
     fn collision_in (&self, origin: Vec3, direction: Vec3) -> Option<Collision>;
 }
