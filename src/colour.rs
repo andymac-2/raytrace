@@ -49,13 +49,13 @@ impl Colour {
         Colour {colour: self.colour.scale(factor)}
     }
 
-    pub fn to_bytes (&self) -> [u8; 3] {
-        let attenuated = (self.colour + Vec3::new(14.0, 14.0, 14.0))
-            .scale(1.0/241.0);
+    pub fn to_bytes (&self) -> Vec<u8> {
+        let attenuated = (self.colour + Vec3::new(30.0, 30.0, 30.0))
+            .scale(1.0/225.0);
         let red = (attenuated.x * 255.0) / (attenuated.x + 1.0);
         let green = (attenuated.y * 255.0) / (attenuated.y + 1.0);
         let blue = (attenuated.z * 255.0) / (attenuated.z + 1.0);
-        [red as u8, green as u8, blue as u8]
+        vec![red as u8, green as u8, blue as u8]
     }
 
     pub const PINK: Colour = Colour {

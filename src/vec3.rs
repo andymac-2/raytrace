@@ -56,6 +56,14 @@ impl Vec3 {
         (self.len_sq() - 1.0).abs() < 0.0001
     }
 
+    pub fn negate (&self) -> Vec3 {
+        Vec3 {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
+    }
+
     pub fn dist_sq (&self, other: Vec3) -> f64 {
         (self.x - other.x) * (self.x - other.x) +
         (self.y - other.y) * (self.y - other.y) +

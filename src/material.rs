@@ -77,7 +77,7 @@ impl Material {
             direction.scale(r) + normal.scale(r * c - f64::sqrt(determinant));
 
         Some(self.refractive_sharpness.map_or(perfect_refraction, |refractivity| {
-            Material::wobble_vector (perfect_refraction, normal, refractivity)
+            Material::wobble_vector (perfect_refraction, normal.scale(-1.0), refractivity)
         }))
     }
 
@@ -106,13 +106,14 @@ impl Material {
             let vec_out = self.refractive_sharpness
                 .map_or(perfect_reflection, |refractivity| {
                     Material::wobble_vector (
-                        perfect_reflection, normal, refractivity)
+                        perfect_reflection, normal.scale(-1.0), refractivity)
                 });
             Some((vec_out, true))
         } 
         else { 
             let perfect_refraction = 
-                direction.scale(r) + normal.scale(r * c - f64::sqrt(determinant));
+                (direction.scale(r) + normal.scale(r * c - f64::sqrt(determinant)))
+                    .normalise();
 
             let vec_out = self.refractive_sharpness
                 .map_or(perfect_refraction, |refractivity| {
@@ -129,7 +130,7 @@ impl Material {
     }
 
     fn wobble_vector (vector: Vec3, normal: Vec3, factor: f64) -> Vec3 {
-        assert!(vector.dot(&normal) >= 0.0);
+        assert!(vector.dot(&normal) > 0.0);
         assert!(normal.normalised() && vector.normalised());
 
         let mut rng = rand::thread_rng();

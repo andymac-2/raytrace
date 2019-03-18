@@ -18,6 +18,7 @@ impl Shape for Sphere {
         let a: f64 = direction.dot(&direction);
         let c: f64 = origin.dot(&origin) - self.radius - self.radius;
 
+        // wikipedia square line intersection.
         let determinant_sq = b * b - 4.0 * a * c;
         if determinant_sq < 0.0 {
             return None;

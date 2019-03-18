@@ -4,11 +4,11 @@ use crate::vec3::Vec3;
 use std::cmp::Ordering::Equal;
 
 pub struct Union {
-    shapes: Vec<Box<dyn Shape>>
+    shapes: Vec<Box<dyn Shape + Sync>>
 }
 
 impl Union {
-    pub fn new (shapes: Vec<Box<dyn Shape>>) -> Union {
+    pub fn new (shapes: Vec<Box<dyn Shape + Sync>>) -> Union {
         Union {shapes: shapes}
     }
 }

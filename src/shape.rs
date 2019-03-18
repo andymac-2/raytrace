@@ -1,17 +1,22 @@
-use super::vec3::Vec3;
-
 pub mod sphere;
-pub use sphere::Sphere;
-
+pub mod plane;
 pub mod translate;
-pub use translate::Translate;
-
 pub mod scale;
-pub use scale::Scale;
-
 pub mod union;
-pub use union::Union;
+pub mod intersection;
+pub mod difference;
 
+use crate::vec3::Vec3;
+
+pub use sphere::Sphere;
+pub use plane::Plane;
+pub use translate::Translate;
+pub use scale::Scale;
+pub use union::Union;
+pub use intersection::Intersection;
+pub use difference::Difference;
+
+#[derive(Debug, Clone)]
 pub struct Collision {
     pub t: f64,
     pub normal: Vec3,
@@ -25,6 +30,10 @@ impl Collision {
             normal: normal,
             collision: collision,
         }
+    }
+
+    pub fn flip_normal (&self) -> Collision {
+        Collision::new(self.t, self.normal.negate(), self.collision)
     }
 }
 
