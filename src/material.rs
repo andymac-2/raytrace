@@ -18,17 +18,13 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn diffuse_colour (&self, light_direction: Vec3, normal: Vec3, 
-        colour: Colour) -> Colour 
-    {
-        self.diffuse_absorption.map_or(Colour::BLACK, |absorption| {
-            let incidence = light_direction.normalise().dot(&normal.normalise());
-            colour.brighten_colour(absorption.brighten(incidence))
-        })
-    }
-
     pub fn is_reflective (&self) -> bool {
         self.reflective_absorption.is_some()
+    }
+    pub fn reflective_ray_count (&self, efficacy: f64) -> f64 {
+        self.reflective_sharpness.map_or(1.0, |sharpness| {
+            f64::ceil(efficacy / (1.0 + sharpness))
+        })
     }
     pub fn reflect_direction (&self, direction: Vec3, normal: Vec3) -> Option<Vec3> {
         if !self.is_reflective() {
@@ -43,14 +39,14 @@ impl Material {
             Material::wobble_vector (perfect_reflection, normal.normalise(), sharpness)
         }))
     }
-    pub fn reflect_colour (&self, colour: Colour) -> Colour {
-        self.reflective_absorption.map_or(Colour::BLACK, |absorption| {
-            colour.brighten_colour(absorption)
-        })
-    }
 
     pub fn is_refractive (&self) -> bool {
         self.refractive_absorption.is_some()
+    }
+    pub fn refractive_ray_count (&self, efficacy: f64) -> f64 {
+        self.refractive_sharpness.map_or(1.0, |sharpness| {
+            f64::ceil(efficacy / (1.0 + sharpness))
+        })
     }
     pub fn refract_direction (&self, direction: Vec3, normal: Vec3) 
         -> Option<Vec3> 

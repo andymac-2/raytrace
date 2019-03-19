@@ -14,13 +14,13 @@ impl Colour {
         }
     }
 
-    fn red (&self) -> f64{
+    pub fn red (&self) -> f64{
         self.colour.x
     }
-    fn green (&self) -> f64 {
+    pub fn green (&self) -> f64 {
         self.colour.y
     }
-    fn blue (&self) -> f64 {
+    pub fn blue (&self) -> f64 {
         self.colour.z
     }
 
@@ -33,7 +33,7 @@ impl Colour {
         Colour::new(red, green, blue)
     }
 
-    pub fn brighten_colour (&self, factor: Colour) -> Colour {
+    pub fn brighten_colour (&self, factor: &Colour) -> Colour {
         Colour::new(
             self.red() * factor.red(),
             self.green() * factor.green(),
@@ -50,8 +50,8 @@ impl Colour {
     }
 
     pub fn to_bytes (&self) -> Vec<u8> {
-        let attenuated = (self.colour + Vec3::new(30.0, 30.0, 30.0))
-            .scale(1.0/225.0);
+        let attenuated = (self.colour + Vec3::new(0.0, 0.0, 0.0))
+            .scale(1.0/200.0);
         let red = (attenuated.x * 255.0) / (attenuated.x + 1.0);
         let green = (attenuated.y * 255.0) / (attenuated.y + 1.0);
         let blue = (attenuated.z * 255.0) / (attenuated.z + 1.0);

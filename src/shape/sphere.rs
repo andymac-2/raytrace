@@ -16,7 +16,7 @@ impl Shape for Sphere {
     fn collision (&self, origin: Vec3, direction: Vec3) -> Option<(Collision)> {
         let b: f64 = 2.0 * (direction.dot(&origin));
         let a: f64 = direction.dot(&direction);
-        let c: f64 = origin.dot(&origin) - self.radius - self.radius;
+        let c: f64 = origin.dot(&origin) - self.radius * self.radius;
 
         // wikipedia square line intersection.
         let determinant_sq = b * b - 4.0 * a * c;
@@ -37,7 +37,7 @@ impl Shape for Sphere {
     fn collision_in (&self, origin: Vec3, direction: Vec3) -> Option<(Collision)> {
         let b: f64 = 2.0 * (direction.dot(&origin));
         let a: f64 = direction.dot(&direction);
-        let c: f64 = origin.dot(&origin) - self.radius - self.radius;
+        let c: f64 = origin.dot(&origin) - self.radius * self.radius;
 
         let determinant_sq = b * b - 4.0 * a * c;
         if determinant_sq < 0.0 {
