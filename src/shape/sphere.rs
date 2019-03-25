@@ -1,5 +1,4 @@
-use crate::shape::{Shape, Collision};
-use crate::vec3::Vec3;
+use crate::shape::{Collision, Direction, Position, Shape};
 
 #[derive(Debug)]
 pub struct Sphere {
@@ -7,14 +6,14 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new (radius: f64) -> Sphere {
-        Sphere {radius: radius}
+    pub fn new(radius: f64) -> Sphere {
+        Sphere { radius: radius }
     }
 }
 
 impl Shape for Sphere {
-    fn collision (&self, origin: Vec3, direction: Vec3) -> Option<(Collision)> {
-        let b: f64 = 2.0 * (direction.dot(&origin));
+    fn collision(&self, origin: &Position, direction: &Direction) -> Option<(Collision)> {
+        let b: f64 = 2.0 * (direction.dot_position(origin));
         let a: f64 = direction.dot(&direction);
         let c: f64 = origin.dot(&origin) - self.radius * self.radius;
 
@@ -23,19 +22,23 @@ impl Shape for Sphere {
         if determinant_sq < 0.0 {
             return None;
         }
-
         let t: f64 = (-b - f64::sqrt(determinant_sq)) / (2.0 * a);
         // intersection behind camera
         if t < 0.0 {
             return None;
         }
 
-        let collision = origin + direction.scale(t);
-        Some(Collision::new(t, collision, collision))
+        let collision = origin.move_along(direction, t);
+        Some(Collision::new(
+            t,
+            collision.to_direction().normalise(),
+            collision,
+            direction.clone(),
+        ))
     }
 
-    fn collision_in (&self, origin: Vec3, direction: Vec3) -> Option<(Collision)> {
-        let b: f64 = 2.0 * (direction.dot(&origin));
+    fn collision_in(&self, origin: &Position, direction: &Direction) -> Option<(Collision)> {
+        let b: f64 = 2.0 * (direction.dot_position(origin));
         let a: f64 = direction.dot(&direction);
         let c: f64 = origin.dot(&origin) - self.radius * self.radius;
 
@@ -50,7 +53,12 @@ impl Shape for Sphere {
             return None;
         }
 
-        let collision = origin + direction.scale(t);
-        Some(Collision::new(t, collision, collision))
+        let collision = origin.move_along(direction, t);
+        Some(Collision::new(
+            t,
+            collision.to_direction().normalise(),
+            collision,
+            direction.clone(),
+        ))
     }
 }
