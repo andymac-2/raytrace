@@ -29,7 +29,7 @@ impl Material for Physical {
             .as_ref()
             .map_or(Colour::BLACK, |colour| colour.brighten(200.0))
     }
-    fn rays(&self, collision: &Collision, ray: &Ray) -> (Option<Ray>, Option<Ray>) {
+    fn rays(&self, collision: &Collision, ray_in: &Ray) -> (Option<Ray>, Option<Ray>) {
         assert!(collision.direction().normalised());
         assert!(collision.normal().normalised());
 
@@ -45,15 +45,15 @@ impl Material for Physical {
         if let Some(refraction_dir) = opt_refraction_dir {
             (
                 self.reflection(collision)
-                    .map(|ray| ray.attenuate(&ray.attenuation())),
+                    .map(|new_ray| new_ray.attenuate(&ray_in.attenuation())),
                 self.refraction(collision, refraction_dir)
-                    .map(|ray| ray.attenuate(&ray.attenuation())),
+                    .map(|new_ray| new_ray.attenuate(&ray_in.attenuation())),
             )
         } else {
             (
                 Some(
                     self.total_internal_reflection(collision)
-                        .attenuate(&ray.attenuation()),
+                        .attenuate(&ray_in.attenuation()),
                 ),
                 None,
             )
@@ -107,7 +107,9 @@ impl Physical {
             .direction()
             .refraction(&collision.normal(), refractive_index)
             .map(|perfect_refraction| match self.reflective_sharpness {
-                Some(sharpness) => perfect_refraction.wobble(&collision.normal(), sharpness),
+                Some(sharpness) => {
+                    perfect_refraction.wobble(&collision.normal().negate(), sharpness)
+                }
                 None => perfect_refraction,
             })
     }

@@ -75,6 +75,8 @@ impl<S: Shape, M: Material> Body for BasicBody<S, M> {
             });
         });
 
-        rays
+        rays.iter()
+            .map(|ray| ray.attenuate_num(ray_count))
+            .collect()
     }
 }

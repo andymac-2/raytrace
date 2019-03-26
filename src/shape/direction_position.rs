@@ -208,6 +208,6 @@ impl Add for &Position {
 impl Sub for &Position {
     type Output = Position;
     fn sub(self, other: &Position) -> Position {
-        Position(&self.0 + &other.0)
+        Position(&self.0 - &other.0)
     }
 }

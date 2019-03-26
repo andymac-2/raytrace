@@ -25,23 +25,23 @@ fn main() -> io::Result<()> {
     let mut stdout = io::stdout();
 
     let size: f64 = 0.5;
-    let samples: u32 = 5;
+    let samples: u32 = 20;
 
     let cam_position = Position::new(-8.0, -30.0, 25.0);
     let focal_point = Position::new(0.0, 0.0, 10.0);
-    let direction = Direction::from_two_points(&focal_point, &cam_position).normalise();
+    let direction = Direction::from_two_points(&cam_position, &focal_point).normalise();
 
     let right = direction.cross(&Direction::UP).normalise();
     let down = direction.cross(&right).normalise();
     let top_left = focal_point
-        .move_along(&down, -256.0)
-        .move_along(&right, -256.0);
+        .move_along(&down, -(256.0 * 0.1))
+        .move_along(&right, -(256.0 * 0.1));
 
     let sun = Translate::new(Position::new(150.0, -150.0, 300.0), Sphere::new(100.0));
     let material_sun = Physical {
         refractive_index: Colour::new(0.0, 0.0, 0.0),
         refractive_absorption: None,
-        emission: Some(Colour::new(500.0, 500.0, 500.0)),
+        emission: Some(Colour::new(80.0, 80.0, 80.0)),
         reflective_sharpness: None,
         refractive_sharpness: None,
     };
@@ -67,8 +67,8 @@ fn main() -> io::Result<()> {
         // layer 2
     ]);
     let material_shapes = Physical {
-        refractive_index: Colour::new(2.0, 2.0, 2.0),
-        refractive_absorption: None, //Some(Colour::new(0.8, 0.81, 0.8)),
+        refractive_index: Colour::new(6.0, 6.0, 6.0),
+        refractive_absorption: None, // Some(Colour::new(0.97, 0.98, 0.97)),
         emission: None,
         reflective_sharpness: None,
         refractive_sharpness: None,
@@ -111,10 +111,10 @@ fn main() -> io::Result<()> {
     ]);
     let material_subsurface = Physical {
         refractive_index: Colour::new(1.1, 1.05, 1.001),
-        refractive_absorption: Some(Colour::new(0.4, 0.4, 0.4)), //Some(Colour::new(0.8, 0.81, 0.8)),
-        emission: None,
+        refractive_absorption: None,
+        emission: Some(Colour::new(10.0, 0.0, 0.0)),
         reflective_sharpness: None,
-        refractive_sharpness: Some(1.0),
+        refractive_sharpness: None,
     };
 
     let ground = Plane::new();

@@ -34,4 +34,11 @@ impl Ray {
             attenuation: self.attenuation.brighten_colour(colour),
         }
     }
+    pub fn attenuate_num(&self, factor: f64) -> Ray {
+        Ray {
+            origin: self.origin.clone(),
+            direction: self.direction.clone(),
+            attenuation: self.attenuation.brighten(1.0 / factor),
+        }
+    }
 }
