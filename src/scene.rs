@@ -4,8 +4,8 @@ use crate::ray::Ray;
 
 use std::cmp::Ordering::Equal;
 
-pub struct Scene {
-    pub bodies: Vec<Box<dyn Body + Sync>>,
+pub struct Scene<'a> {
+    pub bodies: Vec<&'a (dyn Body + Sync)>,
     pub bounces: u32,
 }
 
@@ -14,9 +14,9 @@ pub struct Scene {
 // cast more rays if the light is more effective to spend more computational
 // power where it is required. this value is chosen arbitrarily to approximate
 // even levels of detail.
-const EFFICACY_CONSTANT: f64 = 30.0;
+const EFFICACY_CONSTANT: f64 = 10.0;
 
-impl Scene {
+impl<'a> Scene<'a> {
     pub fn sampler(&self, ray: &Ray, bounce: u32) -> Colour {
         if bounce >= self.bounces {
             return Colour::BLACK;

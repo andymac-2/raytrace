@@ -134,8 +134,23 @@ impl Direction {
     }
 
     pub const UP: Direction = Direction(Vec3::Z);
+    pub const DOWN: Direction = Direction(crate::vec3::Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: -1.0,
+    });
     pub const RIGHT: Direction = Direction(Vec3::X);
+    pub const LEFT: Direction = Direction(crate::vec3::Vec3 {
+        x: -1.0,
+        y: 0.0,
+        z: 0.0,
+    });
     pub const FORWARDS: Direction = Direction(Vec3::Y);
+    pub const BACKWARDS: Direction = Direction(crate::vec3::Vec3 {
+        x: 0.0,
+        y: -1.0,
+        z: 0.0,
+    });
 }
 
 /// a position vector. Some methods are disabled, for example, it doesn't make

@@ -6,14 +6,16 @@ use crate::ray::Ray;
 use crate::shape::{Direction, Position, Shape};
 
 const SLIGHTLY_OFF_SURFACE: f64 = 0.0001;
+const TOTAL_INTERNAL_REFLECTIONS: usize = 15;
+const REFRACTION_COUNT: usize = 3;
 
-pub struct BasicBody<S, M> {
-    pub shape: S,
-    pub material: M,
+pub struct BasicBody<'a, S, M> {
+    pub shape: &'a S,
+    pub material: &'a M,
 }
 
 struct InternalRay<'a, S, M> {
-    pub body: &'a BasicBody<S, M>,
+    pub body: &'a BasicBody<'a, S, M>,
     pub ray: Option<Ray>,
 }
 
@@ -42,17 +44,21 @@ impl<'a, S: Shape, M: Material> Iterator for InternalRay<'a, S, M> {
     }
 }
 
-impl<S: Shape, M: Material> BasicBody<S, M> {
+impl<'a, S: Shape, M: Material> BasicBody<'a, S, M> {
     fn internal_ray(&self, refracted_ray: Ray) -> Vec<Ray> {
         let ray_iter = InternalRay {
             body: self,
             ray: Some(refracted_ray),
         };
-        ray_iter.take(5).filter_map(|x| x).collect()
+        ray_iter
+            .take(TOTAL_INTERNAL_REFLECTIONS)
+            .filter_map(|x| x)
+            .take(REFRACTION_COUNT)
+            .collect()
     }
 }
 
-impl<S: Shape, M: Material> Body for BasicBody<S, M> {
+impl<'a, S: Shape, M: Material> Body for BasicBody<'a, S, M> {
     fn collision(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
         self.shape.collision(origin, direction)
     }

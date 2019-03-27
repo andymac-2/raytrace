@@ -1,5 +1,6 @@
 mod direction_position;
 
+mod cuboid;
 mod difference;
 mod intersection;
 mod plane;
@@ -8,6 +9,7 @@ mod sphere;
 mod translate;
 mod union;
 
+pub use cuboid::Cuboid;
 pub use difference::Difference;
 pub use intersection::Intersection;
 pub use plane::Plane;
@@ -27,4 +29,13 @@ pub trait Shape {
     fn collision(&self, origin: &Position, direction: &Direction) -> Option<Collision>;
     /// collision to the inside of a shape. normal points to outside shape.
     fn collision_in(&self, origin: &Position, direction: &Direction) -> Option<Collision>;
+}
+
+impl<'a, T: Shape> Shape for &'a T {
+    fn collision(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
+        (*self).collision(origin, direction)
+    }
+    fn collision_in(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
+        (*self).collision_in(origin, direction)
+    }
 }

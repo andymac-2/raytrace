@@ -1,12 +1,12 @@
 use crate::shape::{Collision, Direction, Position, Shape};
 
-pub struct Difference {
-    base: Box<dyn Shape + Sync>,
-    negative: Box<dyn Shape + Sync>,
+pub struct Difference<B, N> {
+    base: B,
+    negative: N,
 }
 
-impl Difference {
-    pub fn new(base: Box<dyn Shape + Sync>, negative: Box<dyn Shape + Sync>) -> Difference {
+impl<B, N> Difference<B, N> {
+    pub fn new(base: B, negative: N) -> Difference<B, N> {
         Difference {
             base: base,
             negative: negative,
@@ -14,7 +14,7 @@ impl Difference {
     }
 }
 
-impl Shape for Difference {
+impl<B: Shape, N: Shape> Shape for Difference<B, N> {
     fn collision(&self, origin: &Position, direction: &Direction) -> Option<(Collision)> {
         // base collision does not exist
         let base_col = self.base.collision(origin, direction)?;

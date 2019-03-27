@@ -2,17 +2,17 @@ use crate::shape::{Collision, Direction, Position, Shape};
 
 use std::cmp::Ordering::Equal;
 
-pub struct Union {
-    shapes: Vec<Box<dyn Shape + Sync>>,
+pub struct Union<'a> {
+    shapes: Vec<&'a (dyn Shape + Sync)>,
 }
 
-impl Union {
-    pub fn new(shapes: Vec<Box<dyn Shape + Sync>>) -> Union {
+impl<'a> Union<'a> {
+    pub fn new(shapes: Vec<&'a (dyn Shape + Sync)>) -> Union<'a> {
         Union { shapes: shapes }
     }
 }
 
-impl Shape for Union {
+impl<'a> Shape for Union<'a> {
     fn collision(&self, origin: &Position, direction: &Direction) -> Option<(Collision)> {
         let collisions = self
             .shapes
