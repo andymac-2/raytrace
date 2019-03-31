@@ -19,4 +19,6 @@ pub trait Material {
     /// reflective surfaces only need to cast one ray to check every
     /// possibility, but diffuse areas will require multiple rays.
     fn ray_count(&self, efficacy: f64) -> f64;
+    // returns true if the object is a light source.
+    fn is_light(&self) -> bool;
 }

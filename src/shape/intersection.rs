@@ -1,12 +1,12 @@
 use crate::shape::{Collision, Direction, Position, Shape};
 
-pub struct Intersection {
-    shape1: Box<dyn Shape + Sync>,
-    shape2: Box<dyn Shape + Sync>,
+pub struct Intersection<T, U> {
+    shape1: T,
+    shape2: U,
 }
 
-impl Intersection {
-    pub fn new(shape1: Box<dyn Shape + Sync>, shape2: Box<dyn Shape + Sync>) -> Intersection {
+impl<T: Shape, U: Shape> Intersection<T, U> {
+    pub fn new(shape1: T, shape2: U) -> Intersection<T, U> {
         Intersection {
             shape1: shape1,
             shape2: shape2,
@@ -14,7 +14,7 @@ impl Intersection {
     }
 }
 
-impl Shape for Intersection {
+impl<T: Shape, U: Shape> Shape for Intersection<T, U> {
     fn collision(&self, origin: &Position, direction: &Direction) -> Option<(Collision)> {
         let collision1 = self.shape1.collision(origin, direction);
         // maybe do a check here to see if we can short circuit?

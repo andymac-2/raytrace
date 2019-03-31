@@ -8,6 +8,7 @@ pub mod shape;
 pub mod vec3;
 // mod monad;
 
+use nalgebra::base::{Matrix4, Vector3};
 use rand::Rng;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::io;
@@ -18,7 +19,9 @@ use colour::Colour;
 use material::Physical;
 use ray::Ray;
 use scene::Scene;
-use shape::{Cuboid, Difference, Direction, Plane, Position, Shape, Sphere, Translate, Union};
+use shape::{
+    Affine, Cuboid, Difference, Direction, Plane, Position, Shape, Sphere, Translate, Union,
+};
 
 const PIXEL_SIZE: f64 = 0.15;
 
@@ -27,7 +30,7 @@ fn main() -> io::Result<()> {
     let mut stdout = io::stdout();
 
     let size: f64 = 0.5;
-    let samples: u32 = 200;
+    let samples: u32 = 20;
 
     let cam_position = Position::new(-20.0, -60.0, 40.0);
     let focal_point = Position::new(0.0, 0.0, 10.0);
@@ -48,7 +51,8 @@ fn main() -> io::Result<()> {
         refractive_sharpness: None,
     };
 
-    let shape1 = Difference::new(Sphere::new(6.0), Cuboid::new(9.0, 9.0, 9.0));
+    let shape1 = Sphere::new(6.0);
+    let _shape1 = Difference::new(Sphere::new(6.0), Cuboid::new(9.0, 9.0, 9.0));
     let shape1_vec = vec![
         Translate::new(Position::new(15.0, 15.0, 4.0), &shape1),
         Translate::new(Position::new(15.0, -15.0, 4.0), &shape1),
@@ -59,7 +63,9 @@ fn main() -> io::Result<()> {
     shape1_vec.iter().for_each(|x| {
         shape_1_dyn_vec.push(x);
     });
-    let shapes1 = Union::new(shape_1_dyn_vec);
+    let transform = Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57));
+    let shapes1 = Affine::new(Union::new(shape_1_dyn_vec), transform);
+    // let shapes1 = Union::new(shape_1_dyn_vec);
 
     let material_shapes = Physical {
         refractive_index: Colour::new(1.5, 1.5, 1.5),
@@ -73,6 +79,13 @@ fn main() -> io::Result<()> {
         Difference::new(Cuboid::new(20.0, 20.0, 20.0), Sphere::new(13.0)),
     );
     let material_subsurface = Physical {
+        refractive_index: Colour::new(6.0, 6.0, 6.0),
+        refractive_absorption: None,
+        emission: None, // Some(Colour::new(1.0, 0.0, 0.0)),
+        reflective_sharpness: None,
+        refractive_sharpness: None,
+    };
+    let _material_subsurface = Physical {
         refractive_index: Colour::new(1.5, 1.5, 1.5),
         refractive_absorption: Some(Colour::new(0.98, 0.95, 0.95)),
         emission: None, // Some(Colour::new(1.0, 0.0, 0.0)),
@@ -112,10 +125,7 @@ fn main() -> io::Result<()> {
         bodies_dyn_vec.push(&**x); // What the fuck?
     });
 
-    let scene = Scene {
-        bounces: 7,
-        bodies: bodies_dyn_vec,
-    };
+    let scene = Scene::new(bodies_dyn_vec, 7);
 
     let image: Vec<u8> = (0..512)
         .into_par_iter()

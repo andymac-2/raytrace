@@ -1,5 +1,8 @@
 use crate::shape::{Direction, Position};
 use crate::vec3::Vec3;
+use nalgebra::base::Matrix4;
+
+use std::cmp::Ordering;
 
 #[derive(Debug)]
 pub struct Collision {
@@ -34,6 +37,14 @@ impl Collision {
         &self.direction
     }
 
+    pub fn affine_inv(&self, transform: Matrix4<f64>) -> Collision {
+        Collision::new(
+            self.t,
+            self.normal.affine_normal_inv(transform),
+            self.collision.affine_inverse(transform),
+            self.direction.affine_inverse(transform),
+        )
+    }
     pub fn translate(&self, translation: &Position) -> Collision {
         Collision::new(
             self.t,
@@ -58,5 +69,22 @@ impl Collision {
             self.collision.clone(),
             self.direction.clone(),
         )
+    }
+}
+
+impl PartialOrd for Collision {
+    fn partial_cmp(&self, other: &Collision) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl PartialEq for Collision {
+    fn eq(&self, other: &Collision) -> bool {
+        self.t() == other.t()
+    }
+}
+impl Eq for Collision {}
+impl Ord for Collision {
+    fn cmp(&self, other: &Collision) -> Ordering {
+        self.t().partial_cmp(&other.t()).unwrap_or(Ordering::Equal)
     }
 }

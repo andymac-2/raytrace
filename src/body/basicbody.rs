@@ -85,4 +85,7 @@ impl<'a, S: Shape, M: Material> Body for BasicBody<'a, S, M> {
             .map(|ray| ray.attenuate_num(ray_count))
             .collect()
     }
+    fn is_light(&self) -> bool {
+        self.material.is_light()
+    }
 }

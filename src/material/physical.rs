@@ -68,6 +68,9 @@ impl Material for Physical {
         self.reflective_sharpness
             .map_or(1.0, |sharpness| f64::ceil(efficacy / (1.0 + sharpness)))
     }
+    fn is_light (&self) -> bool {
+        self.emission.is_some()
+    }
 }
 
 impl Physical {

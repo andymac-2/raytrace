@@ -1,7 +1,9 @@
 mod direction_position;
 
+mod affine;
 mod cuboid;
 mod difference;
+mod fractal;
 mod intersection;
 mod plane;
 mod scale;
@@ -9,8 +11,10 @@ mod sphere;
 mod translate;
 mod union;
 
+pub use affine::Affine;
 pub use cuboid::Cuboid;
 pub use difference::Difference;
+pub use fractal::Fractal;
 pub use intersection::Intersection;
 pub use plane::Plane;
 pub use scale::Scale;
@@ -37,5 +41,14 @@ impl<'a, T: Shape> Shape for &'a T {
     }
     fn collision_in(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
         (*self).collision_in(origin, direction)
+    }
+}
+
+impl<T: Shape> Shape for Box<T> {
+    fn collision(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
+        self.as_ref().collision(origin, direction)
+    }
+    fn collision_in(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
+        self.as_ref().collision_in(origin, direction)
     }
 }
