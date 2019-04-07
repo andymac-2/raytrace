@@ -1,6 +1,6 @@
 # raytrace
 
-A simple raytrecer written in Rust
+A simple raytracer written in Rust
 
 It is strongly advised to build this program in release mode even if you are only debugging due to performance reasons.
 
