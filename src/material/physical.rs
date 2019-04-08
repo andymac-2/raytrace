@@ -30,29 +30,30 @@ impl Material for Physical {
             .map_or(Colour::BLACK, |colour| colour.brighten(200.0))
     }
     fn rays(&self, collision: &Collision, ray_in: &Ray) -> (Option<Ray>, Option<Ray>) {
-        assert!(collision.direction().normalised());
+        assert!(ray_in.direction().normalised());
         assert!(collision.normal().normalised());
 
         let flipped = collision.flip_normal();
-        let (collision, refractive_index) = if collision.direction().dot(&collision.normal()) < 0.0
-        {
+        let (collision, refractive_index) = if ray_in.direction().dot(&collision.normal()) < 0.0 {
             (collision, self.avg_refractive_index())
         } else {
             (&flipped, 1.0 / self.avg_refractive_index())
         };
 
-        let opt_refraction_dir = self.refract_direction(collision, refractive_index);
+        let normal = collision.normal();
+        let direction = ray_in.direction();
+        let opt_refraction_dir = self.refract_direction(normal, direction, refractive_index);
         if let Some(refraction_dir) = opt_refraction_dir {
             (
-                self.reflection(collision)
+                self.reflection(collision, ray_in)
                     .map(|new_ray| new_ray.attenuate(&ray_in.attenuation())),
-                self.refraction(collision, refraction_dir)
+                self.refraction(collision, ray_in, refraction_dir)
                     .map(|new_ray| new_ray.attenuate(&ray_in.attenuation())),
             )
         } else {
             (
                 Some(
-                    self.total_internal_reflection(collision)
+                    self.total_internal_reflection(collision, ray_in)
                         .attenuate(&ray_in.attenuation()),
                 ),
                 None,
@@ -68,15 +69,20 @@ impl Material for Physical {
         self.reflective_sharpness
             .map_or(1.0, |sharpness| f64::ceil(efficacy / (1.0 + sharpness)))
     }
-    fn is_light (&self) -> bool {
+    fn is_light(&self) -> bool {
         self.emission.is_some()
     }
 }
 
 impl Physical {
-    fn refraction(&self, collision: &Collision, refract_direction: Direction) -> Option<Ray> {
+    fn refraction(
+        &self,
+        collision: &Collision,
+        ray: &Ray,
+        refract_direction: Direction,
+    ) -> Option<Ray> {
         if self.is_refractive() {
-            let cos_incidence = -(collision.normal().dot(&collision.direction()));
+            let cos_incidence = -(collision.normal().dot(&ray.direction()));
 
             let attenuation = self.initial_refract_attenuation(cos_incidence);
             let origin = collision.collision();
@@ -85,11 +91,14 @@ impl Physical {
             None
         }
     }
-    fn reflection(&self, collision: &Collision) -> Option<Ray> {
+    fn reflection(&self, collision: &Collision, ray: &Ray) -> Option<Ray> {
         if self.is_reflective() {
-            let cos_incidence = -(collision.normal().dot(&collision.direction()));
+            let normal = collision.normal();
+            let direction = ray.direction();
 
-            let reflection_direction = self.reflect_direction(collision);
+            let cos_incidence = -(normal.dot(direction));
+
+            let reflection_direction = self.reflect_direction(normal, direction);
             let attenuation = self.reflection_attenuation(cos_incidence);
             let origin = collision.collision();
             Some(Ray::new(origin.clone(), reflection_direction, attenuation))
@@ -97,29 +106,31 @@ impl Physical {
             None
         }
     }
-    fn total_internal_reflection(&self, collision: &Collision) -> Ray {
-        let reflection_direction = self.reflect_direction(collision);
+    fn total_internal_reflection(&self, collision: &Collision, ray: &Ray) -> Ray {
+        let reflection_direction = self.reflect_direction(collision.normal(), ray.direction());
         let attenuation = Colour::new(1.0, 1.0, 1.0);
         let origin = collision.collision();
         Ray::new(origin.clone(), reflection_direction, attenuation)
     }
 
-    fn refract_direction(&self, collision: &Collision, refractive_index: f64) -> Option<Direction> {
-        assert!(collision.direction().dot(&collision.normal()) <= 0.0);
-        collision
-            .direction()
-            .refraction(&collision.normal(), refractive_index)
+    fn refract_direction(
+        &self,
+        normal: &Direction,
+        direction: &Direction,
+        refractive_index: f64,
+    ) -> Option<Direction> {
+        assert!(direction.dot(normal) <= 0.0);
+        direction
+            .refraction(normal, refractive_index)
             .map(|perfect_refraction| match self.reflective_sharpness {
-                Some(sharpness) => {
-                    perfect_refraction.wobble(&collision.normal().negate(), sharpness)
-                }
+                Some(sharpness) => perfect_refraction.wobble(&normal.negate(), sharpness),
                 None => perfect_refraction,
             })
     }
-    fn reflect_direction(&self, collision: &Collision) -> Direction {
-        let reflection = collision.direction().reflection(&collision.normal());
+    fn reflect_direction(&self, normal: &Direction, direction: &Direction) -> Direction {
+        let reflection = direction.reflection(normal);
         match self.reflective_sharpness {
-            Some(sharpness) => reflection.wobble(&collision.normal(), sharpness),
+            Some(sharpness) => reflection.wobble(normal, sharpness),
             None => reflection,
         }
     }

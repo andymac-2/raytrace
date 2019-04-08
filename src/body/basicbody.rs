@@ -9,9 +9,9 @@ const SLIGHTLY_OFF_SURFACE: f64 = 0.0001;
 const TOTAL_INTERNAL_REFLECTIONS: usize = 15;
 const REFRACTION_COUNT: usize = 3;
 
-pub struct BasicBody<'a, S, M> {
-    pub shape: &'a S,
-    pub material: &'a M,
+pub struct BasicBody<S, M> {
+    pub shape: S,
+    pub material: M,
 }
 
 struct InternalRay<'a, S, M> {

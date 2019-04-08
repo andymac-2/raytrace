@@ -5,8 +5,7 @@ use crate::ray::Ray;
 use std::cmp::Ordering::Equal;
 
 pub struct Scene<'a> {
-    bodies: Vec<&'a (dyn Body + Sync)>,
-    lights: Vec<&'a (dyn Body + Sync)>,
+    bodies: Vec<Box<dyn Body + Sync + 'a>>,
     bounces: u32,
 }
 
@@ -18,14 +17,9 @@ pub struct Scene<'a> {
 const EFFICACY_CONSTANT: f64 = 10.0;
 
 impl<'a> Scene<'a> {
-    pub fn new(bodies: Vec<&'a (dyn Body + Sync)>, bounces: u32) -> Scene<'a> {
-        let lights = bodies
-            .iter()
-            .filter_map(|body| if body.is_light() { Some(*body) } else { None })
-            .collect();
+    pub fn new(bodies: Vec<Box<dyn Body + Sync + 'a>>, bounces: u32) -> Scene<'a> {
         Scene {
             bodies: bodies,
-            lights: lights,
             bounces: bounces,
         }
     }

@@ -44,6 +44,7 @@ impl Ray {
     }
 }
 
+// TODO: make shape take a gemoatric ray.
 #[derive(Debug, Clone)]
 pub struct GeometricRay {
     origin: Position,
@@ -64,7 +65,7 @@ impl GeometricRay {
         &self.direction
     }
 
-    pub fn affine_trans(&self, transform: Matrix4<f64>) -> GeometricRay {
+    pub fn affine_trans(&self, transform: &Matrix4<f64>) -> GeometricRay {
         GeometricRay {
             origin: self.origin.affine_trans(transform),
             direction: self.direction.affine_trans(transform),

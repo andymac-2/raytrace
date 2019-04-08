@@ -33,7 +33,6 @@ impl Shape for Sphere {
             t,
             collision.to_direction().normalise(),
             collision,
-            direction.clone(),
         ))
     }
 
@@ -58,7 +57,6 @@ impl Shape for Sphere {
             t,
             collision.to_direction().normalise(),
             collision,
-            direction.clone(),
         ))
     }
 }

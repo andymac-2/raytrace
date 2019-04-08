@@ -63,7 +63,7 @@ impl Direction {
 
     /// Perform an affine transformation of a direction. Do not normalise the
     /// result, as it may be used in distance calculations later
-    pub fn affine_trans(&self, matrix: Matrix4<f64>) -> Direction {
+    pub fn affine_trans(&self, matrix: &Matrix4<f64>) -> Direction {
         let original = Vector4::new(self.0.x, self.0.y, self.0.z, 0.0);
         let transformed = matrix * original;
         Direction(Vec3 {
@@ -73,7 +73,7 @@ impl Direction {
         })
     }
 
-    pub fn affine_inverse(&self, matrix: Matrix4<f64>) -> Direction {
+    pub fn affine_inverse(&self, matrix: &Matrix4<f64>) -> Direction {
         let original = Vector4::new(self.0.x, self.0.y, self.0.z, 0.0);
         let transformed = matrix.try_inverse().unwrap() * original;
         Direction(Vec3 {
@@ -85,7 +85,7 @@ impl Direction {
 
     /// Given a plane defined by a normal in an affine space, return the normal
     /// to a plane before the transform
-    pub fn affine_normal_inv(&self, matrix: Matrix4<f64>) -> Direction {
+    pub fn affine_normal_inv(&self, matrix: &Matrix4<f64>) -> Direction {
         let original = RowVector4::new(self.0.x, self.0.y, self.0.z, 0.0);
         let transformed = original * matrix;
         Direction(Vec3 {
@@ -97,7 +97,7 @@ impl Direction {
 
     /// Given a plane defined by a normal in an affine space, return the normal
     /// to a plane before the transform
-    pub fn affine_normal(&self, matrix: Matrix4<f64>) -> Direction {
+    pub fn affine_normal(&self, matrix: &Matrix4<f64>) -> Direction {
         let original = RowVector4::new(self.0.x, self.0.y, self.0.z, 0.0);
         let transformed = original * matrix.try_inverse().unwrap();
         Direction(Vec3 {
@@ -263,7 +263,7 @@ impl Position {
         Position(self.0.reduce_vec(vector))
     }
 
-    pub fn affine_trans(&self, matrix: Matrix4<f64>) -> Position {
+    pub fn affine_trans(&self, matrix: &Matrix4<f64>) -> Position {
         let original = Vector4::new(self.0.x, self.0.y, self.0.z, 1.0);
         let transformed = matrix * original;
         Position(Vec3 {
@@ -273,7 +273,7 @@ impl Position {
         })
     }
 
-    pub fn affine_inverse(&self, matrix: Matrix4<f64>) -> Position {
+    pub fn affine_inverse(&self, matrix: &Matrix4<f64>) -> Position {
         let original = Vector4::new(self.0.x, self.0.y, self.0.z, 1.0);
         let transformed = matrix.try_inverse().unwrap() * original;
         Position(Vec3 {

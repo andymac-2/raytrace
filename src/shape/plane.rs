@@ -18,12 +18,7 @@ impl Shape for Plane {
         assert!(t >= 0.0);
         let collision = origin.move_along(direction, t);
 
-        Some(Collision::new(
-            t,
-            Direction::UP,
-            collision,
-            direction.clone(),
-        ))
+        Some(Collision::new(t, Direction::UP, collision))
     }
 
     fn collision_in(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
@@ -34,11 +29,6 @@ impl Shape for Plane {
         assert!(t >= 0.0);
         let collision = origin.move_along(direction, t);
 
-        Some(Collision::new(
-            t,
-            Direction::UP,
-            collision,
-            direction.clone(),
-        ))
+        Some(Collision::new(t, Direction::UP, collision))
     }
 }

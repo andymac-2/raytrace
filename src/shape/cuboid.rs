@@ -99,7 +99,6 @@ impl Shape for Cuboid {
                 collision_in.t,
                 collision_in.normal,
                 position,
-                direction.clone(),
             ))
         } else {
             None
@@ -115,7 +114,6 @@ impl Shape for Cuboid {
                 collision_out.t,
                 collision_out.normal,
                 position,
-                direction.clone(),
             ))
         } else {
             None

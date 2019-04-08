@@ -6,10 +6,11 @@ use std::collections::BinaryHeap;
 pub struct Fractal<P, B> {
     primitive: P,
     bounds: B,
-    branches: Vec<Matrix4<f64>>,
+    transforms: Vec<Matrix4<f64>>,
     dwell: u32,
 }
 
+/// Collisions are in global space, not local space.
 enum Event {
     Real(Collision),
     Bound(Collision, Matrix4<f64>),
@@ -41,30 +42,66 @@ impl PartialOrd for Event {
     }
 }
 
+fn push_opt<T: Ord>(heap: &mut BinaryHeap<T>, item: Option<T>) {
+    match item {
+        None => {}
+        Some(element) => heap.push(element),
+    }
+}
+
 impl<P: Shape, B: Shape> Fractal<P, B> {
-    pub fn new(primitive: P, bounds: B, branches: Vec<Matrix4<f64>>, dwell: u32) -> Fractal<P, B> {
-        assert!(branches.iter().all(|matrix| matrix.is_invertible()));
+    pub fn new(
+        primitive: P,
+        bounds: B,
+        transforms: Vec<Matrix4<f64>>,
+        dwell: u32,
+    ) -> Fractal<P, B> {
+        assert!(transforms.iter().all(|matrix| matrix.is_invertible()));
         Fractal {
             primitive: primitive,
             bounds: bounds,
-            branches: branches,
+            transforms: transforms,
             dwell: dwell,
         }
     }
 
-    fn push_opt<T: Ord>(heap: &mut BinaryHeap<T>, item: Option<T>) {
-        match item {
-            None => {}
-            Some(element) => heap.push(element),
-        }
-    }
-
-    pub fn collision_dwell(
+    fn get_inner_events(
         &self,
         origin: &Position,
         direction: &Direction,
-        dwell: u32,
-    ) -> Option<(Collision)> {
+        transform: &Matrix4<f64>,
+    ) -> Vec<Event> {
+        assert!(transform.is_invertible());
+        let mut result: Vec<Event> = self
+            .transforms
+            .iter()
+            .filter_map(|inner_transform| {
+                let global_transform = transform * inner_transform;
+                let inv_transform = global_transform.try_inverse().unwrap();
+
+                let new_origin = origin.affine_trans(&inv_transform);
+                let new_direction = direction.affine_trans(&inv_transform);
+
+                self.bounds
+                    .collision(&new_origin, &new_direction)
+                    .map(|collision| {
+                        Event::Bound(collision.affine_trans(&global_transform), global_transform)
+                    })
+            })
+            .collect();
+
+        let inv_transform = transform.try_inverse().unwrap();
+        let new_origin = origin.affine_trans(&inv_transform);
+        let new_direction = direction.affine_trans(&inv_transform);
+
+        if let Some(collision) = self.primitive.collision(&new_origin, &new_direction) {
+            let collision = collision.affine_trans(transform);
+            result.push(Event::Real(collision));
+        }
+        result
+    }
+
+    fn collision_dwell(&self, origin: &Position, direction: &Direction) -> Option<(Collision)> {
         let collision = self.bounds.collision(origin, direction)?;
 
         let mut heap = BinaryHeap::new();
@@ -74,21 +111,19 @@ impl<P: Shape, B: Shape> Fractal<P, B> {
             match heap.pop() {
                 None => return None,
                 Some(Event::Real(collision)) => return Some(collision),
-                Some(Event::Bound(collision, transform)) => {
-                    //push_opt(heap, self.bounds.)
-                    unimplemented!()
+                Some(Event::Bound(_, transform)) => {
+                    self.get_inner_events(origin, direction, &transform)
+                        .into_iter()
+                        .for_each(|event| {
+                            heap.push(event);
+                        });
                 }
             }
         }
-        None
-        // while the heap is not empty
-        // pop the first element of the heap
-        // if it's a real collision, return the collision.
-        // if we don't collide with the bounds of the item, continue
-        // otherwise, add the primitive to the heap alongide the bounds
-        // of the child fractal
-
-        // if the heap is empty, return None.
+        heap.pop().map(|event| match event {
+            Event::Real(collision) => collision,
+            Event::Bound(collision, _) => collision,
+        })
     }
     pub fn collision_in_dwell(
         &self,
@@ -102,7 +137,7 @@ impl<P: Shape, B: Shape> Fractal<P, B> {
 
 impl<P: Shape, B: Shape> Shape for Fractal<P, B> {
     fn collision(&self, origin: &Position, direction: &Direction) -> Option<(Collision)> {
-        unimplemented!()
+        self.collision_dwell(origin, direction)
     }
     fn collision_in(&self, origin: &Position, direction: &Direction) -> Option<(Collision)> {
         unimplemented!()

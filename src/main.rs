@@ -2,6 +2,7 @@ mod body;
 mod collision;
 pub mod colour;
 mod material;
+mod parse;
 mod ray;
 mod scene;
 pub mod shape;
@@ -20,7 +21,8 @@ use material::Physical;
 use ray::Ray;
 use scene::Scene;
 use shape::{
-    Affine, Cuboid, Difference, Direction, Plane, Position, Shape, Sphere, Translate, Union,
+    Affine, Cuboid, Difference, Direction, Fractal, Plane, Position, Shape, Sphere, Translate,
+    Union,
 };
 
 const PIXEL_SIZE: f64 = 0.15;
@@ -30,10 +32,10 @@ fn main() -> io::Result<()> {
     let mut stdout = io::stdout();
 
     let size: f64 = 0.5;
-    let samples: u32 = 20;
+    let samples: u32 = 100;
 
     let cam_position = Position::new(-20.0, -60.0, 40.0);
-    let focal_point = Position::new(0.0, 0.0, 10.0);
+    let focal_point = Position::new(0.0, 0.0, 20.0);
     let direction = Direction::from_two_points(&cam_position, &focal_point).normalise();
 
     let right = direction.cross(&Direction::UP).normalise();
@@ -51,47 +53,78 @@ fn main() -> io::Result<()> {
         refractive_sharpness: None,
     };
 
-    let shape1 = Sphere::new(6.0);
-    let _shape1 = Difference::new(Sphere::new(6.0), Cuboid::new(9.0, 9.0, 9.0));
+    let shape1 = Difference::new(Sphere::new(6.0), Cuboid::new(9.0, 9.0, 9.0));
     let shape1_vec = vec![
-        Translate::new(Position::new(15.0, 15.0, 4.0), &shape1),
-        Translate::new(Position::new(15.0, -15.0, 4.0), &shape1),
-        Translate::new(Position::new(-15.0, 15.0, 4.0), &shape1),
+        Translate::new(Position::new(15.0, 15.0, 6.0), &shape1),
+        Translate::new(Position::new(15.0, -15.0, 6.0), &shape1),
+        Translate::new(Position::new(-15.0, 15.0, 6.0), &shape1),
         Translate::new(Position::new(-15.0, -15.0, 6.0), &shape1),
     ];
     let mut shape_1_dyn_vec: Vec<&(dyn Shape + Sync)> = Vec::new();
     shape1_vec.iter().for_each(|x| {
         shape_1_dyn_vec.push(x);
     });
-    let transform = Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57));
-    let shapes1 = Affine::new(Union::new(shape_1_dyn_vec), transform);
-    // let shapes1 = Union::new(shape_1_dyn_vec);
+    let shapes1 = Union::new(shape_1_dyn_vec);
+    let material_shapes1 = Physical {
+        refractive_index: Colour::new(2.0, 2.0, 2.0),
+        refractive_absorption: Some(Colour::new(0.99, 0.97, 0.97)),
+        emission: None, // Some(Colour::new(1.0, 0.0, 0.0)),
+        reflective_sharpness: None,
+        refractive_sharpness: None,
+    };
 
-    let material_shapes = Physical {
-        refractive_index: Colour::new(1.5, 1.5, 1.5),
-        refractive_absorption: Some(Colour::new(0.95, 0.98, 0.95)),
+    let material_shapes2 = Physical {
+        refractive_index: Colour::new(3.0, 3.0, 3.0),
+        refractive_absorption: Some(Colour::new(0.90, 0.90, 0.99)),
         emission: None, // Some(Colour::new(0.0, 1.0, 0.0)),
         reflective_sharpness: None,
         refractive_sharpness: None,
     };
-    let shapes2 = Translate::new(
-        Position::new(0.0, 0.0, 20.0),
-        Difference::new(Cuboid::new(20.0, 20.0, 20.0), Sphere::new(13.0)),
+    let transform = Matrix4::new(
+        1.0, 0.0, 0.5, 0.0, //
+        0.0, 1.0, 0.0, 0.0, //
+        0.0, 0.0, 1.0, 25.0, //
+        0.0, 0.0, 0.0, 1.0,
     );
-    let material_subsurface = Physical {
-        refractive_index: Colour::new(6.0, 6.0, 6.0),
-        refractive_absorption: None,
-        emission: None, // Some(Colour::new(1.0, 0.0, 0.0)),
-        reflective_sharpness: None,
-        refractive_sharpness: None,
-    };
-    let _material_subsurface = Physical {
-        refractive_index: Colour::new(1.5, 1.5, 1.5),
-        refractive_absorption: Some(Colour::new(0.98, 0.95, 0.95)),
-        emission: None, // Some(Colour::new(1.0, 0.0, 0.0)),
-        reflective_sharpness: None,
-        refractive_sharpness: None,
-    };
+    let shapes2 = Affine::new(
+        Difference::new(Cuboid::new(20.0, 20.0, 20.0), Sphere::new(13.0)),
+        transform,
+    );
+    let _shapes2 = Translate::new(
+        Position::new(0.0, 0.0, 30.0),
+        Fractal::new(
+            //Difference::new(Cuboid::new(20.0, 20.0, 20.0), Sphere::new(13.0)),
+            Cuboid::new(20.0, 20.0, 20.0),
+            Cuboid::new(40.0, 40.0, 40.0),
+            vec![
+                Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57))
+                    .append_scaling(0.4)
+                    .append_translation(&Vector3::new(10.0, 10.0, 10.0)),
+                Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57))
+                    .append_scaling(0.4)
+                    .append_translation(&Vector3::new(10.0, 10.0, -10.0)),
+                Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57))
+                    .append_scaling(0.4)
+                    .append_translation(&Vector3::new(10.0, -10.0, 10.0)),
+                Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57))
+                    .append_scaling(0.4)
+                    .append_translation(&Vector3::new(10.0, -10.0, -10.0)),
+                Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57))
+                    .append_scaling(0.4)
+                    .append_translation(&Vector3::new(-10.0, 10.0, 10.0)),
+                Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57))
+                    .append_scaling(0.4)
+                    .append_translation(&Vector3::new(-10.0, 10.0, -10.0)),
+                Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57))
+                    .append_scaling(0.4)
+                    .append_translation(&Vector3::new(-10.0, -10.0, 10.0)),
+                Matrix4::new_rotation(Vector3::new(0.0, 0.0, 1.57))
+                    .append_scaling(0.4)
+                    .append_translation(&Vector3::new(-10.0, -10.0, -10.0)),
+            ],
+            10,
+        ),
+    );
 
     let ground = Plane::new();
     let material_ground = Physical {
@@ -109,11 +142,11 @@ fn main() -> io::Result<()> {
         }),
         Box::new(BasicBody {
             shape: &shapes2,
-            material: &material_shapes,
+            material: &material_shapes2,
         }),
         Box::new(BasicBody {
             shape: &shapes1,
-            material: &material_subsurface,
+            material: &material_shapes1,
         }),
         Box::new(BasicBody {
             shape: &ground,
