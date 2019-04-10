@@ -53,31 +53,31 @@ impl Cuboid {
         direction: &Direction,
     ) -> (Intersect, Intersect) {
         let i1 = Intersect {
-            t: (self.half_x - origin.get_x()) / direction.get_x(),
+            t: (self.half_x - origin.x()) / direction.x(),
             normal: Direction::RIGHT,
         };
         let i2 = Intersect {
-            t: (-self.half_x - origin.get_x()) / direction.get_x(),
+            t: (-self.half_x - origin.x()) / direction.x(),
             normal: Direction::LEFT,
         };
         let (min_tx, max_tx) = i1.min_max(i2);
 
         let i1 = Intersect {
-            t: (self.half_y - origin.get_y()) / direction.get_y(),
+            t: (self.half_y - origin.y()) / direction.y(),
             normal: Direction::FORWARDS,
         };
         let i2 = Intersect {
-            t: (-self.half_y - origin.get_y()) / direction.get_y(),
+            t: (-self.half_y - origin.y()) / direction.y(),
             normal: Direction::BACKWARDS,
         };
         let (min_ty, max_ty) = i1.min_max(i2);
 
         let i1 = Intersect {
-            t: (self.half_z - origin.get_z()) / direction.get_z(),
+            t: (self.half_z - origin.z()) / direction.z(),
             normal: Direction::UP,
         };
         let i2 = Intersect {
-            t: (-self.half_z - origin.get_z()) / direction.get_z(),
+            t: (-self.half_z - origin.z()) / direction.z(),
             normal: Direction::DOWN,
         };
         let (min_tz, max_tz) = i1.min_max(i2);

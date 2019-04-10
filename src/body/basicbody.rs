@@ -15,7 +15,7 @@ pub struct BasicBody<S, M> {
 }
 
 struct InternalRay<'a, S, M> {
-    pub body: &'a BasicBody<'a, S, M>,
+    pub body: &'a BasicBody<S, M>,
     pub ray: Option<Ray>,
 }
 
@@ -44,7 +44,7 @@ impl<'a, S: Shape, M: Material> Iterator for InternalRay<'a, S, M> {
     }
 }
 
-impl<'a, S: Shape, M: Material> BasicBody<'a, S, M> {
+impl<S: Shape, M: Material> BasicBody<S, M> {
     fn internal_ray(&self, refracted_ray: Ray) -> Vec<Ray> {
         let ray_iter = InternalRay {
             body: self,
@@ -58,7 +58,7 @@ impl<'a, S: Shape, M: Material> BasicBody<'a, S, M> {
     }
 }
 
-impl<'a, S: Shape, M: Material> Body for BasicBody<'a, S, M> {
+impl<S: Shape, M: Material> Body for BasicBody<S, M> {
     fn collision(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
         self.shape.collision(origin, direction)
     }
@@ -75,7 +75,10 @@ impl<'a, S: Shape, M: Material> Body for BasicBody<'a, S, M> {
         let mut rays = Vec::new();
         (0..ray_count as u32).for_each(|_| {
             let (opt_reflection, opt_refraction) = self.material.rays(collision, ray_in);
-            opt_reflection.map(|reflection| rays.push(reflection));
+            opt_reflection.map(|mut reflection| {
+                reflection.move_along(SLIGHTLY_OFF_SURFACE);
+                rays.push(reflection)
+            });
             opt_refraction.map(|refraction| {
                 rays.append(&mut self.internal_ray(refraction));
             });

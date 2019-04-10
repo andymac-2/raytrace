@@ -1,12 +1,17 @@
 use crate::body::Body;
+use crate::camera::Camera;
 use crate::colour::Colour;
 use crate::ray::Ray;
+
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use std::cmp::Ordering::Equal;
 
 pub struct Scene<'a> {
-    bodies: Vec<Box<dyn Body + Sync + 'a>>,
+    samples: u32,
     bounces: u32,
+    camera: Camera,
+    bodies: Vec<Box<dyn Body + Sync + 'a>>,
 }
 
 // if the attenuation is low, then the resulting pixel will be largely affected
@@ -14,13 +19,20 @@ pub struct Scene<'a> {
 // cast more rays if the light is more effective to spend more computational
 // power where it is required. this value is chosen arbitrarily to approximate
 // even levels of detail.
-const EFFICACY_CONSTANT: f64 = 10.0;
+const EFFICACY_CONSTANT: f64 = 40.0;
 
 impl<'a> Scene<'a> {
-    pub fn new(bodies: Vec<Box<dyn Body + Sync + 'a>>, bounces: u32) -> Scene<'a> {
+    pub fn new(
+        samples: u32,
+        bounces: u32,
+        camera: Camera,
+        bodies: Vec<Box<dyn Body + Sync + 'a>>,
+    ) -> Scene<'a> {
         Scene {
-            bodies: bodies,
+            samples: samples,
             bounces: bounces,
+            camera: camera,
+            bodies: bodies,
         }
     }
 
@@ -51,5 +63,39 @@ impl<'a> Scene<'a> {
                 colour
             })
             .unwrap_or(Colour::BLACK)
+    }
+
+    pub fn render_ppm(&self) -> Vec<u8> {
+        let (x_res, y_res) = self.camera.resolution();
+
+        let mut header = format!("P6 {} {} 255 ", x_res, y_res).as_bytes().to_vec();
+        let mut pixels = (0..y_res)
+            .into_par_iter()
+            .map(|y| {
+                (0..x_res)
+                    .map(|x| {
+                        let mut colour = Colour::new(0.0, 0.0, 0.0);
+
+                        (0..self.samples).for_each(|_| {
+                            let (start, direction) = self.camera.generate_ray(x as f64, y as f64);
+                            colour = &colour
+                                + &self.sampler(
+                                    &Ray::new(start, direction, Colour::new(1.0, 1.0, 1.0)),
+                                    0,
+                                );
+                        });
+
+                        colour = colour.brighten(1.0 / (self.samples as f64));
+
+                        colour.to_bytes()
+                    })
+                    .flatten()
+                    .collect::<Vec<u8>>()
+            })
+            .flatten()
+            .collect();
+
+        header.append(&mut pixels);
+        header
     }
 }

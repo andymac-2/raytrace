@@ -11,10 +11,10 @@ impl Plane {
 
 impl Shape for Plane {
     fn collision(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
-        if origin.get_z() <= 0.0 || direction.get_z() >= 0.0 {
+        if origin.z() <= 0.0 || direction.z() >= 0.0 {
             return None;
         }
-        let t = -origin.get_z() / direction.get_z();
+        let t = -origin.z() / direction.z();
         assert!(t >= 0.0);
         let collision = origin.move_along(direction, t);
 
@@ -22,10 +22,10 @@ impl Shape for Plane {
     }
 
     fn collision_in(&self, origin: &Position, direction: &Direction) -> Option<Collision> {
-        if origin.get_z() >= 0.0 || direction.get_z() <= 0.0 {
+        if origin.z() >= 0.0 || direction.z() <= 0.0 {
             return None;
         }
-        let t = -origin.get_z() / direction.get_z();
+        let t = -origin.z() / direction.z();
         assert!(t >= 0.0);
         let collision = origin.move_along(direction, t);
 

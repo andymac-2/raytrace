@@ -28,6 +28,10 @@ impl Ray {
         &self.attenuation
     }
 
+    pub fn move_along(&mut self, t: f64) {
+        self.origin = self.origin.move_along(&self.direction, t);
+    }
+
     pub fn attenuate(&self, colour: &Colour) -> Ray {
         Ray {
             origin: self.origin.clone(),

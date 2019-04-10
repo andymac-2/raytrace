@@ -15,13 +15,13 @@ impl Direction {
     pub fn from_two_points(from: &Position, to: &Position) -> Direction {
         Direction(&to.0 - &from.0)
     }
-    pub fn get_x(&self) -> f64 {
+    pub fn x(&self) -> f64 {
         self.0.x
     }
-    pub fn get_y(&self) -> f64 {
+    pub fn y(&self) -> f64 {
         self.0.y
     }
-    pub fn get_z(&self) -> f64 {
+    pub fn z(&self) -> f64 {
         self.0.z
     }
 
@@ -210,13 +210,13 @@ impl Position {
     pub fn new(x: f64, y: f64, z: f64) -> Position {
         Position(Vec3::new(x, y, z))
     }
-    pub fn get_x(&self) -> f64 {
+    pub fn x(&self) -> f64 {
         self.0.x
     }
-    pub fn get_y(&self) -> f64 {
+    pub fn y(&self) -> f64 {
         self.0.y
     }
-    pub fn get_z(&self) -> f64 {
+    pub fn z(&self) -> f64 {
         self.0.z
     }
 
@@ -282,6 +282,12 @@ impl Position {
             z: transformed.z,
         })
     }
+
+    pub const ORIGIN: Position = Position(crate::vec3::Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
 }
 
 impl Add for &Position {

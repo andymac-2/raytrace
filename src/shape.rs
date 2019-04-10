@@ -5,6 +5,7 @@ mod cuboid;
 mod difference;
 mod fractal;
 mod intersection;
+pub mod march;
 mod plane;
 mod scale;
 mod sphere;

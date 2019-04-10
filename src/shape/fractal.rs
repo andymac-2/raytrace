@@ -127,9 +127,9 @@ impl<P: Shape, B: Shape> Fractal<P, B> {
     }
     pub fn collision_in_dwell(
         &self,
-        origin: &Position,
-        direction: &Direction,
-        dwell: u32,
+        _origin: &Position,
+        _direction: &Direction,
+        _dwell: u32,
     ) -> Option<(Collision)> {
         unimplemented!()
     }
